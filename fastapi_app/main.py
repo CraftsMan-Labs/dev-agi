@@ -1,34 +1,3 @@
-#!/bin/bash
-
-# Define the project directory
-PROJECT_DIR="fastapi_app"
-
-# Create the project directory
-mkdir -p $PROJECT_DIR
-
-# Navigate to the project directory
-cd $PROJECT_DIR
-
-# Create a virtual environment
-python3 -m venv venv
-
-# Activate the virtual environment
-source venv/bin/activate
-
-# Create requirements.txt
-cat <<EOL > requirements.txt
-fastapi
-uvicorn
-boto3
-cryptography
-pydantic
-EOL
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create main.py
-cat <<EOL > main.py
 from fastapi import FastAPI, HTTPException
 from models import AWSCredentials, ECSClusterModel, VPCModel, LambdaModel, S3UploadModel, S3BucketModel, CognitoGroupModel
 from cryptography.fernet import Fernet
@@ -122,42 +91,3 @@ def create_cognito_group(group: CognitoGroupModel):
         GroupName=group.group_name
     )
     return response
-EOL
-
-# Create models.py
-cat <<EOL > models.py
-from pydantic import BaseModel, Field
-from typing import Optional
-
-class AWSCredentials(BaseModel):
-    AWS_ACCESS_KEY: str = Field(..., min_length=16, max_length=128)
-    AWS_SECRET_KEY: str = Field(..., min_length=16, max_length=128)
-
-class ECSClusterModel(BaseModel):
-    cluster_name: str = Field(..., min_length=1, max_length=255)
-
-class VPCModel(BaseModel):
-    cidr_block: str = Field(..., regex=r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d{1,2}$')
-
-class LambdaModel(BaseModel):
-    function_name: str = Field(..., min_length=1, max_length=255)
-    image_uri: str = Field(..., min_length=1, max_length=255)
-    role_arn: str = Field(..., min_length=20, max_length=2048)
-
-class S3UploadModel(BaseModel):
-    bucket_name: str = Field(..., min_length=3, max_length=63)
-    file_name: str = Field(..., min_length=1, max_length=1024)
-    object_name: Optional[str] = None
-
-class S3BucketModel(BaseModel):
-    bucket_name: str = Field(..., min_length=3, max_length=63)
-
-class CognitoGroupModel(BaseModel):
-    user_pool_id: str = Field(..., min_length=1, max_length=55)
-    group_name: str = Field(..., min_length=1, max_length=128)
-EOL
-
-# Deactivate the virtual environment
-deactivate
-
-echo "FastAPI application setup complete."
